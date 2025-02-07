@@ -1,0 +1,6 @@
+apiVersion: v2
+name: brians-tpi-nfs
+description: Brians turing pi NFS storage class and claim setup
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

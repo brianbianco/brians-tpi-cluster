@@ -1,0 +1,12 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: {{ .Values.storageClass.name }}
+provisioner: cluster.local/nfs-nfs-subdir-external-provisioner
+parameters:
+  archiveOnDelete: "false"
+  pathPattern: {{ .Values.storageClass.pathPattern }}
+mountOptions:
+  - vers=4.1
+reclaimPolicy: {{ .Values.storageClass.reclaimPolicy }}
+

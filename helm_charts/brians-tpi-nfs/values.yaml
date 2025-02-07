@@ -1,0 +1,14 @@
+storageClass:
+  name: nfs-per-node
+  reclaimPolicy: Delete
+  pathPattern: "${.PVC.namespace}/${.PVC.name}"
+  mountOptions:
+    - vers=4.1
+  volumeBindingMode: Immediate
+
+pvc:
+  name: nfs-pvc
+  storage: 5Gi
+  accessModes:
+    - ReadWriteMany
+
