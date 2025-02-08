@@ -7,9 +7,12 @@ spec:
   valuesContent: |-
     dashboard:
       enabled: true
+    api:
+      insecure: true
     ports:
       traefik:
-        expose: true # this is not recommended in production deployments
+        expose:
+          default: true
     logs:
       access:
         enabled: true
