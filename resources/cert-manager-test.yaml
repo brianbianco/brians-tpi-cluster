@@ -1,0 +1,14 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: brians-computer
+  namespace: cert-manager
+spec:
+  secretName: brians-computer-tls
+  issuerRef:
+    name: letsencrypt-staging
+    kind: ClusterIssuer
+  dnsNames:
+  - "*.brians.computer"
+  - "*.local.brians.computer"
+
