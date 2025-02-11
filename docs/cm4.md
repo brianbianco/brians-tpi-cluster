@@ -49,3 +49,9 @@ Modify `/etc/netplan/50-cloud-init.yaml`
 # Install nfs server if we are going to share
 
 `sudo apt-get install -y nfs-kernel-server`
+
+# Set vim as the default editor
+
+`sudo update-alternatives --set editor /usr/bin/vim.basic`
+
+
