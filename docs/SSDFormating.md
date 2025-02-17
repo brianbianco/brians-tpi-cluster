@@ -19,3 +19,16 @@
 # Print the partition table to verify
 
 `sudo parted /dev/sda print`
+
+# Make the first partition ext4
+
+`sudo mkfs -t ext4 /dev/sda1`
+
+# Get blkid of parition
+
+`sudo blkid /dev/sda1`
+
+# Create /etc/fstab entry (example)
+
+`UUID=37204e82-312d-49e1-8679-b54329a12892  /mnt/data  ext4  defaults,nofail  0  2`
+
