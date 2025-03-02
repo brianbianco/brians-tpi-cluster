@@ -13,3 +13,6 @@ https://kubernetes-sigs.github.io/external-dns/latest/docs/tutorials/cloudflare/
 
 Fill out the manifest I provide in the manifests directory. This puts the cloudflare API keys into the kube-system
 
+Remember that the api token for cloudflare must be base64 encoded. If you used echo to send it to base64 make sure to use the -n flag!
+
+`echo -n 'MYTOKEN' | base64
