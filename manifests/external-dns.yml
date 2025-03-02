@@ -1,4 +1,5 @@
 ---
+# Secret for Cloudflare API Token
 apiVersion: v1
 kind: Secret
 metadata:
@@ -6,8 +7,46 @@ metadata:
   namespace: default
 type: Opaque
 data:
-  apiToken: <YOUR_CLOUDFLARE_API_TOKEN_BASE64> # Replace with your base64-encoded API token
+  apiToken: <CLOUDFLARE API TOKEN>
 ---
+# ServiceAccount for ExternalDNS
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: external-dns
+  namespace: default
+---
+# ClusterRole for ExternalDNS
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: external-dns
+rules:
+  - apiGroups: [""]
+    resources: ["services", "endpoints", "pods"]
+    verbs: ["get", "watch", "list"]
+  - apiGroups: ["extensions", "networking.k8s.io"]
+    resources: ["ingresses"]
+    verbs: ["get", "watch", "list"]
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["list", "watch"]
+---
+# ClusterRoleBinding for ExternalDNS
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: external-dns-viewer
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: external-dns
+subjects:
+  - kind: ServiceAccount
+    name: external-dns
+    namespace: default
+---
+# Deployment for ExternalDNS
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -24,15 +63,16 @@ spec:
       labels:
         app: external-dns
     spec:
+      serviceAccountName: external-dns
       containers:
         - name: external-dns
           image: registry.k8s.io/external-dns/external-dns:v0.15.1
           args:
-            - --source=service # Other option is ingress
+            - --source=service
             - --domain-filter=brians.computer,local.brians.computer
             - --provider=cloudflare
             - --cloudflare-proxied
-            - --cloudflare-dns-records-per-page=5000 # fetch up to 5,000 DNS records per request
+            - --cloudflare-dns-records-per-page=5000
           env:
             - name: CF_API_TOKEN
               valueFrom:
