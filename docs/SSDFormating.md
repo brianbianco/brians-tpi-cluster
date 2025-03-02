@@ -32,3 +32,12 @@
 
 `UUID=37204e82-312d-49e1-8679-b54329a12892  /mnt/data  ext4  defaults,nofail  0  2`
 
+# Repeat for sda2
+
+`sudo mkdir /mnt/longhorn`
+
+`sudo blkid /dev/sda2`
+
+make an entry in fstab for it
+
+`UUID=37204e82-312d-49e1-8679-b54329a12892  /mnt/longhorn  ext4  defaults,nofail  0  2`
