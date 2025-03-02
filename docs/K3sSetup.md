@@ -47,3 +47,14 @@ Copy over the `/etc/rancher/k3s/k3s.yaml` to the nodes `~/.kube/config` if you w
 `scp /etc/rancher/k3s/k3s.yaml ubuntu@frog.local:.kube/config.yaml`
 
 Make sure to edit the config and change the IP from 127.0.0.1 to the leaders IP
+
+# Optionally change where the containerd images are stored
+
+There is likely a way to handle this before the agent install, for now i've settled for moving it
+after the fact if i want the containerd files to be on a different device
+
+`sudo systemctl stop k3s-agent`
+
+`sudo cp -r /var/lib/rancher/k3s/agent/containerd /mnt/data/containerd`
+
+`sudo ln -s /mnt/data/containerd /var/lib/rancher/k3s/agent/containerd`
