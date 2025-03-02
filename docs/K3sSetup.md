@@ -55,6 +55,5 @@ after the fact if i want the containerd files to be on a different device
 
 `sudo systemctl stop k3s-agent`
 
-`sudo cp -r /var/lib/rancher/k3s/agent/containerd /mnt/data/containerd`
-
+`sudo mv /var/lib/rancher/k3s/agent/containerd /mnt/data/`
 `sudo ln -s /mnt/data/containerd /var/lib/rancher/k3s/agent/containerd`
