@@ -6,7 +6,7 @@ metadata:
   namespace: cert-manager
 type: Opaque
 stringData:
-  api-token: <Your Cloudflare API Token>
+  api-token: <plain text API token>
 ---
 # Staging ClusterIssuer
 apiVersion: cert-manager.io/v1

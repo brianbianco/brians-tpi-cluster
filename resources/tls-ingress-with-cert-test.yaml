@@ -36,13 +36,13 @@ metadata:
   name: test-app
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
-    external-dns.alpha.kubernetes.io/hostname: test-app.local.brians.computer
+    external-dns.alpha.kubernetes.io/hostname: test-app.brians.computer
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     traefik.ingress.kubernetes.io/router.tls: "true"
 spec:
   ingressClassName: traefik
   rules:
-    - host: test-app.local.brians.computer
+    - host: test-app.brians.computer
       http:
         paths:
           - path: /
@@ -54,5 +54,5 @@ spec:
                   number: 80
   tls:
     - hosts:
-        - test-app.local.brians.computer
+        - test-app.brians.computer
       secretName: test-app-tls
