@@ -10,9 +10,11 @@ write-kubeconfig-mode: "0644"
 disable:
   - servicelb
   - cloud-controller
+  - traefik
 node-ip: "192.168.4.184"
 kubelet-arg:
   - "allowed-unsafe-sysctls=net.ipv4.ip_forward"
+data-dir: "/mnt/data"
 #tls-san:
 #  - "magus.local.brians.computer"
 EOF
@@ -47,6 +49,13 @@ Copy over the `/etc/rancher/k3s/k3s.yaml` to the nodes `~/.kube/config` if you w
 `scp /etc/rancher/k3s/k3s.yaml ubuntu@frog.local:.kube/config.yaml`
 
 Make sure to edit the config and change the IP from 127.0.0.1 to the leaders IP
+
+We should also link to the config on the controller server
+
+```
+mkdir -p ~/.kube
+ln -s /etc/rancher/k3s/k3s.yaml ~/.kube/config
+```
 
 # Optionally change where the containerd images are stored
 
