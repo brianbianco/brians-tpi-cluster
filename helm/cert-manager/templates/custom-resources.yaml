@@ -1,0 +1,8 @@
+{{- if .Values.installCustomResources }}
+{{- range $i, $resource := .Values.customResources }}
+{{- if gt $i 0 }}
+---
+{{- end }}
+{{ toYaml $resource }}
+{{- end }}
+{{- end }}

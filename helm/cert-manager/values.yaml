@@ -1,0 +1,47 @@
+cert-manager:
+  crds:
+    enabled: true
+
+installCustomResources: true
+
+cloudflare:
+  # Leave apiToken empty here; it will be provided via --set.
+  apiToken: ""
+  # The name for the Cloudflare secret; this is referenced in your ClusterIssuers.
+  apiTokenSecretName: "cloudflare-api-token"
+
+customResources:
+  - apiVersion: cert-manager.io/v1
+    kind: ClusterIssuer
+    metadata:
+      name: letsencrypt-staging
+    spec:
+      acme:
+        email: "brian.bianco@gmail.com"
+        server: "https://acme-staging-v02.api.letsencrypt.org/directory"
+        privateKeySecretRef:
+          name: "cloudflare-api-token"
+        solvers:
+          - dns01:
+              cloudflare:
+                email: "brian.bianco@gmail.com"
+                apiTokenSecretRef:
+                  name: "cloudflare-api-token"
+                  key: "api-token"
+  - apiVersion: cert-manager.io/v1
+    kind: ClusterIssuer
+    metadata:
+      name: letsencrypt-prod
+    spec:
+      acme:
+        email: "brian.bianco@gmail.com"
+        server: "https://acme-v02.api.letsencrypt.org/directory"
+        privateKeySecretRef:
+          name: "cloudflare-api-token"
+        solvers:
+          - dns01:
+              cloudflare:
+                email: "brian.bianco@gmail.com"
+                apiTokenSecretRef:
+                  name: "cloudflare-api-token"
+                  key: "api-token"

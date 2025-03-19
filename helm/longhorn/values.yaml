@@ -1,0 +1,12 @@
+ui:
+  ingress:
+    enabled: true
+    host: longhorn-ui.brians.computer
+    className: traefik
+    annotations:
+      cert-manager.io/cluster-issuer: "letsencrypt-prod"
+      external-dns.alpha.kubernetes.io/hostname: "longhorn-ui.brians.computer"
+      traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+      traefik.ingress.kubernetes.io/router.tls: "true"
+    tls:
+      secretName: longhorn-ui-tls

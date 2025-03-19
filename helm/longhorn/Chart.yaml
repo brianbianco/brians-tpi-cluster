@@ -1,0 +1,8 @@
+apiVersion: v2
+name: longhorn-wrapper
+description: A wrapper chart for Longhorn with custom values.
+version: 0.1.0
+dependencies:
+  - name: longhorn
+    version: "1.8.1"
+    repository: "https://charts.longhorn.io"
