@@ -1,0 +1,5 @@
+apiVersion: v2
+name: metallb-config
+description: Wrapper chart for MetalLB with custom L2 advertisement and IP pool
+version: 0.1.0
+

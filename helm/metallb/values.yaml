@@ -1,0 +1,9 @@
+ipPool:
+  name: pool
+  addresses:
+    - 192.168.4.215-192.168.4.225
+
+l2Advertisement:
+  name: l2-advertisement
+  ipAddressPools:
+    - pool

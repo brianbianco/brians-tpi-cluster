@@ -1,0 +1,8 @@
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: {{ .Values.ipPool.name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  addresses:
+    {{- toYaml .Values.ipPool.addresses | nindent 4 }}

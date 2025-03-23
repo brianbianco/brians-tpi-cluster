@@ -23,3 +23,6 @@ traefik:
         port: 443
       traefik:
         port: 9000
+
+dashboardIngressRoute:
+  enabled: true
