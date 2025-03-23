@@ -1,5 +1,5 @@
 apiVersion: v2
-name: longhorn-wrapper
+name: longhorn-install
 description: A wrapper chart for Longhorn with custom values.
 version: 0.1.0
 dependencies:

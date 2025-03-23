@@ -1,0 +1,27 @@
+traefik:
+  # k3s deploys Traefik as a DaemonSet, not a Deployment.
+  deployment:
+    enabled: false
+  daemonset:
+    enabled: true
+
+  # Enable the dashboard – both via the standard dashboard and the ingressRoute.
+  dashboard:
+    enabled: true
+  ingressRoute:
+    dashboard:
+      enabled: true
+
+  # Enable the insecure API.
+  api:
+    insecure: true
+
+  # Enable access logging.
+  logs:
+    access:
+      enabled: true
+
+  # Instead of using an object for expose, use a boolean.
+  ports:
+    traefik:
+      expose: true
