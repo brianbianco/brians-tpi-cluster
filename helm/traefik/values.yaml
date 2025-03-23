@@ -1,8 +1,7 @@
 traefik:
-  daemonset:
-    enabled: true
   deployment:
-    enabled: false
+    enabled: true
+    kind: DaemonSet
   api:
     insecure: true
   dashboard:
