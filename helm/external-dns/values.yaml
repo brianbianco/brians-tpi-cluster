@@ -1,21 +1,22 @@
 installCustomResources: true
 
 cloudflare:
-  # Do not provide a default value here. Users must pass the token via --set.
+  # Do not set a default value here; the token will be provided via --set.
   apiToken: ""
   apiTokenSecretName: "cloudflare-api-token"
 
 external-dns:
-  provider: cloudflare
+  provider:
+    name: cloudflare
   sources:
     - service
     - ingress
   domainFilters:
     - brians.computer
     - local.brians.computer
+  logLevel: debug
   extraArgs:
     - "--cloudflare-dns-records-per-page=5000"
-    - "--log-level=debug"
   env:
     - name: CF_API_TOKEN
       valueFrom:
