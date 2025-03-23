@@ -1,9 +1,8 @@
 apiVersion: v2
-name: traefik-install
-description: K3s-equivalent Traefik install with dashboard and logs
-type: application
+name: traefik
+description: Custom Traefik v3 install replicating k3s defaults plus custom settings
 version: 0.1.0
 dependencies:
   - name: traefik
-    version: 24.0.0
-    repository: https://traefik.github.io/charts
+    version: "34.4.1"
+    repository: https://helm.traefik.io/traefik
