@@ -1,10 +1,4 @@
 apiVersion: v2
-name: cert-manager-install
-description: A wrapper chart for cert-manager with custom resources.
+name: cert-manager-config
+description: A wrapper chart to configure cert-manager for my cluster.
 version: 0.1.0
-appVersion: "v1.17.1"
-
-dependencies:
-  - name: cert-manager
-    version: "v1.17.1"
-    repository: "https://charts.jetstack.io"
