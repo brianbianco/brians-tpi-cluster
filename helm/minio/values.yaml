@@ -1,0 +1,72 @@
+mode: standalone
+replicas: 1
+
+# These need to be created before installing
+existingSecret: minio-creds
+
+resources:
+  requests:
+    memory: "4Gi"
+  limits:
+    memory: "4Gi"
+
+persistence:
+  enabled: true
+  storageClass: "longhorn"
+  accessMode: ReadWriteOnce
+  size: 100Gi
+
+service:
+  type: ClusterIP
+  port: 9000
+
+# Ingress configuration for the MinIO API
+ingress:
+  enabled: true
+  ingressClassName: "traefik"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    external-dns.alpha.kubernetes.io/hostname: "minio.brians.computer"
+    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+  hosts:
+    - minio.brians.computer
+  path: /
+  tls:
+    - secretName: minio-tls
+      hosts:
+        - minio.brians.computer
+
+# Ingress configuration for the MinIO Console
+consoleIngress:
+  enabled: true
+  ingressClassName: "traefik"
+  hosts:
+    - console.minio.brians.computer
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    external-dns.alpha.kubernetes.io/hostname: "console.minio.brians.computer"
+    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+  tls:
+    - secretName: minio-console-tls
+      hosts:
+        - console.minio.brians.computer
+
+consoleService:
+  type: ClusterIP
+  port: "9001"
+
+tolerations:
+  - key: "node-role.kubernetes.io/control-plane"
+    operator: "Exists"
+    effect: "NoSchedule"
+
+affinity:
+  nodeAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        preference:
+          matchExpressions:
+            - key: minio-preferred
+              operator: In
+              values:
+                - "true"
