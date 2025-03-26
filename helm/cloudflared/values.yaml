@@ -1,0 +1,6 @@
+cloudflare:
+  secretName: cloudflare-tunnel-credentials
+  tunnelName: tunnel-home
+
+image:
+  tag: "2025.2.1"
