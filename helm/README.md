@@ -4,7 +4,7 @@ Update the dep charts with the following
 
 `helm dependency update`
 
-# Install one of the wrapper charts
+# Install a chart
 
 `helm upgrade --install traefik ./traefik --namespace kube-system --create-namespace -f ./traefik/values.yaml`
 
