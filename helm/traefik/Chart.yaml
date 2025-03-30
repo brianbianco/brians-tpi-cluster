@@ -1,5 +1,0 @@
-apiVersion: v2
-name: traefik-config
-description: My custom traefik configurations
-version: 0.1.0
-
