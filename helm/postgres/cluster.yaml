@@ -1,0 +1,24 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: postgres
+  namespace: postgres
+spec:
+  instances: 1
+
+  storage:
+    storageClass: longhorn
+    size: 30Gi
+
+  bootstrap:
+    initdb:
+      database: app
+      owner: app
+      secret:
+        name: app-user
+
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+
