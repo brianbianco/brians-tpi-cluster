@@ -1,0 +1,49 @@
+replicaCount: 1
+
+backendStore:
+  databaseMigration: true
+  postgres:
+    enabled: true
+    host: postgres.brians.computer
+    port: 5432
+    database: mlflow
+    user: mlflow
+    driver: psycopg2
+  existingDatabaseSecret:
+    # -- The name of the existing database secret.
+    name: "mlflow-postgres-secret"
+    # -- The key of the username in the existing database secret.
+    usernameKey: "username"
+    # -- The key of the password in the existing database secret.
+    passwordKey: "password"
+
+artifactRoot:
+  proxiedArtifactStorage: true
+  s3:
+    enabled: true
+    bucket: mlflow-artifacts
+    path: ""
+
+ingress:
+  enabled: true
+  className: traefik
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    external-dns.alpha.kubernetes.io/hostname: mlflow.brians.computer
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+  hosts:
+    - host: mlflow.brians.computer
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: mlflow-tls
+      hosts:
+        - mlflow.brians.computer
+
+extraSecretNamesForEnvFrom:
+  - mlflow-s3-secret
+
+extraEnvVars:
+  AWS_ACCESS_KEY_ID: ""
+  AWS_SECRET_ACCESS_KEY: ""
