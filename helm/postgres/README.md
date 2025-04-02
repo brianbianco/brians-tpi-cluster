@@ -23,3 +23,12 @@ kubectl apply -f cluster.yaml
 # Optionally create the load balancer (for external DNS auto entries)
 kubectl apply -f service.yaml
 ```
+
+# Creating new users / databases
+
+```
+kubectl exec -n postgres -it postgres-0 -- psql -U postgres
+
+CREATE USER myuser WITH PASSWORD 'mypassword';
+CREATE DATABASE mydb OWNER myuser;
+```
