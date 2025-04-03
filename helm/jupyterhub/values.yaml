@@ -52,9 +52,13 @@ singleuser:
   defaultUrl: /lab
   extraLabels:
     hub.jupyter.org/network-access-hub: "true"
+  networkPolicy:
+    enabled: false
 
 cull:
   enabled: true
   timeout: 3600
   every: 600
   adminUsers: true
+
+
