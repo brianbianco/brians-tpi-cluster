@@ -14,6 +14,8 @@ RUN uv pip install --system \
     pandas \
     matplotlib \
     seaborn \
-    scikit-learn
+    scikit-learn \
+    mlflow \
+    boto3
 
 ENV JUPYTER_ENABLE_LAB=yes
