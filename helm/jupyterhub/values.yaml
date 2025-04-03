@@ -48,6 +48,7 @@ singleuser:
   image:
     name: brianbianco/jupyterhub
     tag: latest
+    pullPolicy: Always
   defaultUrl: /lab
   extraLabels:
     hub.jupyter.org/network-access-hub: "true"
