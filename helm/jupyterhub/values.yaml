@@ -1,0 +1,59 @@
+hub:
+  config:
+    JupyterHub:
+      admin_access: true
+      authenticator_class: dummy
+  extraConfig:
+    dummy-password: |
+      import os
+      c.DummyAuthenticator.password = os.environ["DUMMY_PASSWORD"]
+  extraEnv:
+    DUMMY_PASSWORD: ""
+  existingSecret: jupyterhub-secret
+  db:
+    type: sqlite-pvc
+    pvc:
+      storageClassName: longhorn
+
+proxy:
+  service:
+    type: ClusterIP
+
+  https:
+    enabled: false
+
+ingress:
+  enabled: true
+  ingressClassName: traefik
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    external-dns.alpha.kubernetes.io/hostname: jupyter.brians.computer
+  hosts:
+    - jupyter.brians.computer
+  tls:
+    - hosts:
+        - jupyter.brians.computer
+      secretName: jupyterhub-tls
+
+singleuser:
+  storage:
+    type: dynamic
+    dynamic:
+      storageClass: longhorn
+    capacity: 25Gi
+  memory:
+    guarantee: 1G
+  cpu:
+    guarantee: 0.5
+  image:
+    name: brianbianco/jupyterhub
+    tag: latest
+  defaultUrl: /lab
+  extraLabels:
+    hub.jupyter.org/network-access-hub: "true"
+
+cull:
+  enabled: true
+  timeout: 3600
+  every: 600
+  adminUsers: true
