@@ -2,6 +2,9 @@
 
 Longhorn will be a distributed file system for our k3s cluster.
 
+This is left here for reference but using the helm directions in the helm direction is
+how I install longhorn now
+
 # Necessary packages
 
 `sudo apt-get install -y open-iscsi nfs-common`
