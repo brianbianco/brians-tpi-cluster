@@ -19,5 +19,5 @@ kubectl create secret generic mlflow-postgres-secret --namespace=mlflow --from-l
 ```
 
 ```
-helm upgrade --install mlflow community-charts/mlflow --namespace mlflow -f values.yaml
+helm upgrade --install mlflow community-charts/mlflow --namespace mlflow --version 1.8.1 -f values.yaml
 ```

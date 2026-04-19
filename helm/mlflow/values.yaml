@@ -2,6 +2,7 @@ replicaCount: 1
 
 backendStore:
   databaseMigration: true
+  databaseConnectionCheck: true
   postgres:
     enabled: true
     host: postgres.brians.computer
@@ -41,9 +42,11 @@ ingress:
       hosts:
         - mlflow.brians.computer
 
+log:
+  enabled: false
+
+extraArgs:
+  allowedHosts: "mlflow.brians.computer"
+
 extraSecretNamesForEnvFrom:
   - mlflow-s3-secret
-
-extraEnvVars:
-  AWS_ACCESS_KEY_ID: ""
-  AWS_SECRET_ACCESS_KEY: ""
