@@ -62,3 +62,6 @@ cull:
   adminUsers: true
 
 
+
+httpRoute:
+  enabled: false
