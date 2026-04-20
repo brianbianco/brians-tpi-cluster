@@ -4,9 +4,7 @@ deployment:
 
 api:
   insecure: true
-
-dashboard:
-  enabled: true
+  dashboard: true
 
 logs:
   access:

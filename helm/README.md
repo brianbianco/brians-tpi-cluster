@@ -15,5 +15,5 @@ E.G.
 ```
 helm repo add traefik https://helm.traefik.io/traefik
 helm repo update
-helm show values traefik/traefik --version 34.4.1
+helm show values traefik/traefik --version 39.0.8
 ```
