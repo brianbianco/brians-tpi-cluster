@@ -1,0 +1,17 @@
+# Standalone cert for spark.brians.computer. Must be created before installing the operator.
+# A standalone resource is needed because each job creates its own short-lived ingress —
+# if cert-manager's ingress-shim managed the cert it would be garbage collected with the
+# ingress when the job ends, hitting Let's Encrypt rate limits on subsequent jobs.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: spark-tls
+  namespace: spark
+spec:
+  secretName: spark-tls
+  dnsNames:
+    - spark.brians.computer
+  issuerRef:
+    kind: ClusterIssuer
+    group: cert-manager.io
+    name: letsencrypt-prod

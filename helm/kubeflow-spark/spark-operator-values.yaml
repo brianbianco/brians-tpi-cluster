@@ -1,0 +1,33 @@
+controller:
+  uiService:
+    enable: true
+  uiIngress:
+    enable: true
+    ingressClassName: traefik
+    urlFormat: "spark.brians.computer/job/{{$appName}}"
+    tls:
+      - hosts:
+          - spark.brians.computer
+        secretName: spark-tls
+    annotations:
+      external-dns.alpha.kubernetes.io/hostname: spark.brians.computer
+      # The operator generates nginx-style regex paths (/job/name(/|$)(.*)) which Traefik
+      # treats as literal PathPrefix strings by default. PathRegexp makes Traefik interpret
+      # them correctly. Both entrypoints are needed because Spark generates absolute http://
+      # redirect URLs that the browser follows — without the web entrypoint those 404.
+      traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
+      traefik.ingress.kubernetes.io/router.pathmatcher: PathRegexp
+      # Spark expects the reverse proxy to strip the /job/<name> prefix before forwarding.
+      # Without this, Spark receives the full path and loops redirecting back to itself.
+      # The middleware is defined in spark-middleware.yaml.
+      traefik.ingress.kubernetes.io/router.middlewares: spark-spark-strip-job-prefix@kubernetescrd
+
+spark:
+  jobNamespaces:
+    - spark
+    - default
+  serviceAccount:
+    create: true
+    name: spark-operator-spark
+  rbac:
+    create: true

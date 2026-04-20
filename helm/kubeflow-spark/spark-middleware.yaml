@@ -1,0 +1,12 @@
+# Strips /job/<appname> from the request path before forwarding to the Spark driver UI.
+# The operator's ingress is designed for nginx, which rewrites the path automatically.
+# Traefik ignores nginx annotations, so this middleware replicates that behaviour.
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: spark-strip-job-prefix
+  namespace: spark
+spec:
+  stripPrefixRegex:
+    regex:
+      - "^/job/[^/]+"
