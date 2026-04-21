@@ -1,3 +1,4 @@
+> **DEPRECATED** — Replaced by Garage. See `helm/garage/` and `docs/GarageMigration.md`.
 
 Create the root user and password secret
 

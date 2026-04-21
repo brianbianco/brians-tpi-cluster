@@ -1,0 +1,58 @@
+garage:
+  image:
+    repository: dxflrs/arm64_garage
+
+  garage:
+    replicationFactor: "3"
+
+  environment:
+    - name: GARAGE_ADMIN_TOKEN
+      valueFrom:
+        secretKeyRef:
+          name: garage-admin-secret
+          key: token
+
+  deployment:
+    replicaCount: 3
+
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: node-role.kubernetes.io/control-plane
+                operator: DoesNotExist
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: garage
+          topologyKey: kubernetes.io/hostname
+
+  persistence:
+    meta:
+      storageClass: longhorn
+      size: 1Gi
+    data:
+      storageClass: longhorn-single-replica
+      size: 60Gi
+
+  ingress:
+    s3:
+      api:
+        enabled: true
+        className: traefik
+        annotations:
+          cert-manager.io/cluster-issuer: "letsencrypt-prod"
+          external-dns.alpha.kubernetes.io/hostname: "garage.brians.computer"
+          traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+          traefik.ingress.kubernetes.io/router.tls: "true"
+        hosts:
+          - host: garage.brians.computer
+            paths:
+              - path: /
+                pathType: Prefix
+        tls:
+          - secretName: garage-s3-tls
+            hosts:
+              - garage.brians.computer

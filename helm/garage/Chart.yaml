@@ -1,0 +1,8 @@
+apiVersion: v2
+name: garage-install
+description: Wrapper chart for Garage (S3-compatible object store) with cluster values.
+version: 0.1.0
+dependencies:
+  - name: garage
+    version: "0.9.3"
+    repository: "file://charts/garage"

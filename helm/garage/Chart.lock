@@ -1,0 +1,6 @@
+dependencies:
+- name: garage
+  repository: file://charts/garage
+  version: 0.9.3
+digest: sha256:6d0d27b38ef0b3acd5cf3d0c31eb068bfb84a2a4c7c2bc85cd5c278d562997c0
+generated: "2026-04-21T00:21:51.335833864Z"
