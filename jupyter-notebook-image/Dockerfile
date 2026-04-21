@@ -12,6 +12,8 @@ RUN pip install --no-cache-dir \
     scikit-learn \
     mlflow \
     boto3 \
-    pyspark[connect]
-
+    pyspark[connect] \
+    duckdb \
+    pyiceberg[s3fs] \
+    pyarrow
 ENV JUPYTER_ENABLE_LAB=yes
