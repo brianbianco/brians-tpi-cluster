@@ -11,6 +11,7 @@ RUN pip install --no-cache-dir \
     seaborn \
     scikit-learn \
     mlflow \
-    boto3
+    boto3 \
+    pyspark
 
 ENV JUPYTER_ENABLE_LAB=yes
