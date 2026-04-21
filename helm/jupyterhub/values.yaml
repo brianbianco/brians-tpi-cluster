@@ -50,6 +50,8 @@ singleuser:
     tag: latest
     pullPolicy: Always
   defaultUrl: /lab
+  extraEnv:
+    SPARK_CONNECT_URL: "sc://spark-connect-server.spark.svc.cluster.local:15002"
   extraLabels:
     hub.jupyter.org/network-access-hub: "true"
   networkPolicy:

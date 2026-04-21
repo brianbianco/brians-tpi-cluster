@@ -54,6 +54,33 @@ kubectl -n spark get sparkapplications spark-pi
 ```
 
 
+## SparkConnect — interactive PySpark from JupyterHub
+
+`spark-connect.yaml` deploys a persistent SparkConnect server in the `spark` namespace.
+SparkConnect runs a long-lived Spark driver pod that JupyterHub notebooks connect to as
+thin clients over port 15002. Executors spin up dynamically on the cluster nodes as needed
+and are torn down when idle.
+
+This is different from `SparkApplication` (batch jobs like spark-pi): SparkConnect is
+interactive and session-based, designed for exploratory work in notebooks rather than
+fire-and-forget jobs.
+
+### Deploy the SparkConnect server
+
+```
+kubectl apply -f spark-connect.yaml
+kubectl get sparkconnect spark-connect -n spark  # should show Ready
+```
+
+### Implementation notes
+
+- `apache/spark:4.1.1` does not bundle the SparkConnect jars — they are fetched at startup
+  via `spark.jars.packages`. The Ivy cache is redirected to `/tmp/.ivy2` since the spark
+  user's home directory does not exist in the image.
+- The operator creates the server pod using the `default` service account rather than
+  `spark-operator-spark`. A RoleBinding (`spark-default-sa-spark-role`) is included in
+  `spark-connect.yaml` to grant the necessary pod/service permissions to `default`.
+
 ## Traefik compatibility notes
 
 The operator generates nginx-style Ingress resources. Three extra pieces are needed since this cluster uses Traefik:

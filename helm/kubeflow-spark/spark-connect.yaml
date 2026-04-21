@@ -1,0 +1,40 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: spark-default-sa-spark-role
+  namespace: spark
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: spark-operator-spark
+subjects:
+  - kind: ServiceAccount
+    name: default
+    namespace: spark
+---
+apiVersion: sparkoperator.k8s.io/v1alpha1
+kind: SparkConnect
+metadata:
+  name: spark-connect
+  namespace: spark
+spec:
+  image: apache/spark:4.1.1
+  sparkVersion: "4.1.1"
+  server:
+    cores: 1
+    memory: "1g"
+    template:
+      spec:
+        serviceAccountName: spark-operator-spark
+  executor:
+    cores: 1
+    memory: "1g"
+  sparkConf:
+    spark.jars.packages: "org.apache.spark:spark-connect_2.13:4.1.1"
+    spark.driver.extraJavaOptions: "-Divy.home=/tmp/.ivy2"
+    spark.kubernetes.authenticate.driver.serviceAccountName: "spark-operator-spark"
+  dynamicAllocation:
+    enabled: true
+    minExecutors: 0
+    maxExecutors: 4
+    shuffleTrackingEnabled: true
