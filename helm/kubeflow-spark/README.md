@@ -67,7 +67,22 @@ fire-and-forget jobs.
 
 ### Deploy the SparkConnect server
 
+Create the Garage S3 credentials secret first — the SparkConnect server and its executor
+pods use it for Iceberg table access via S3A. Credentials are injected as
+`AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` env vars so they stay out of the YAML.
+Batch `SparkApplication` jobs do not get these credentials; they would need their own
+S3 setup if they require object storage access.
+
+```bash
+kubectl create secret generic garage-s3-credentials \
+  --namespace spark \
+  --from-literal=AWS_ACCESS_KEY_ID=<garage-key-id> \
+  --from-literal=AWS_SECRET_ACCESS_KEY=<garage-secret-key>
 ```
+
+Then deploy:
+
+```bash
 kubectl apply -f spark-connect.yaml
 kubectl get sparkconnect spark-connect -n spark  # should show Ready
 ```
@@ -80,6 +95,11 @@ kubectl get sparkconnect spark-connect -n spark  # should show Ready
 - The operator creates the server pod using the `default` service account rather than
   `spark-operator-spark`. A RoleBinding (`spark-default-sa-spark-role`) is included in
   `spark-connect.yaml` to grant the necessary pod/service permissions to `default`.
+- Iceberg (`iceberg-spark-runtime-4.0_2.13`) and Hadoop AWS (`hadoop-aws`) jars are
+  included in `spark.jars.packages` along with the Iceberg Spark extensions, so notebooks
+  can work with Iceberg tables and the Garage S3A connector out of the box. Static configs
+  like `spark.sql.extensions` cannot be set by notebook clients — they must live in the
+  server's `sparkConf`.
 
 ## Traefik compatibility notes
 
