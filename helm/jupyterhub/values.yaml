@@ -52,6 +52,18 @@ singleuser:
   defaultUrl: /lab
   extraEnv:
     SPARK_CONNECT_URL: "sc://spark-connect-server.spark.svc.cluster.local:15002"
+    AWS_REGION: "us-east-1"
+    AWS_ENDPOINT_URL_S3: "http://garage.garage.svc.cluster.local:3900"
+    AWS_ACCESS_KEY_ID:
+      valueFrom:
+        secretKeyRef:
+          name: jupyter-s3-credentials
+          key: AWS_ACCESS_KEY_ID
+    AWS_SECRET_ACCESS_KEY:
+      valueFrom:
+        secretKeyRef:
+          name: jupyter-s3-credentials
+          key: AWS_SECRET_ACCESS_KEY
   extraLabels:
     hub.jupyter.org/network-access-hub: "true"
   networkPolicy:
