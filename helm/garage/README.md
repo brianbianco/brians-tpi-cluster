@@ -57,6 +57,32 @@ Verify the cluster is healthy:
 kubectl exec --stdin --tty -n garage garage-0 -- ./garage status
 ```
 
+## Key management
+
+Each service gets its own dedicated Garage access key scoped to only the buckets it needs.
+Never share keys between services.
+
+| Key name  | Used by                          | Buckets                       |
+|-----------|----------------------------------|-------------------------------|
+| `brian`   | Admin / personal access          | `misc`, `mlflow`              |
+| `jupyter` | JupyterHub notebook pods         | `iceberg`, `misc`             |
+| `polaris` | Apache Polaris (metadata writes) | `iceberg`                     |
+| `spark`   | Spark Connect data + manifest writes | `iceberg`, `polaris`      |
+
+Buckets:
+- `iceberg` — Polaris writes Iceberg table metadata JSON here (via 1.4.0 non-standard path URI parsing where `s3://polaris/iceberg/...` → bucket=`iceberg`)
+- `polaris` — Spark writes Iceberg data files and manifest files here (via standard S3 URI parsing where `s3://polaris/...` → bucket=`polaris`)
+
+To create a new key and grant bucket access:
+
+```bash
+kubectl exec -n garage garage-0 -- /garage key create <name>
+kubectl exec -n garage garage-0 -- /garage bucket allow --read --write --owner <bucket> --key <key-id>
+```
+
+The corresponding Kubernetes secret should be named `<service>-s3-credentials` and
+created in the service's namespace.
+
 ## Verify values
 
 To see all available configuration options from the upstream chart:

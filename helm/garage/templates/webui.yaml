@@ -26,6 +26,16 @@ spec:
                 secretKeyRef:
                   name: garage-admin-secret
                   key: token
+            - name: S3_ENDPOINT_URL
+              value: http://garage.garage.svc.cluster.local:3900
+          volumeMounts:
+            - name: garage-config
+              mountPath: /etc/garage.toml
+              subPath: garage.toml
+      volumes:
+        - name: garage-config
+          configMap:
+            name: garage-config
 ---
 apiVersion: v1
 kind: Service
