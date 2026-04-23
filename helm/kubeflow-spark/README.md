@@ -73,11 +73,22 @@ pods use it for Iceberg table access via S3A. Credentials are injected as
 Batch `SparkApplication` jobs do not get these credentials; they would need their own
 S3 setup if they require object storage access.
 
+Use the dedicated `spark` Garage key (not the `jupyter` or `brian` key). Create it in
+Garage first if it doesn't exist:
+
 ```bash
-kubectl create secret generic garage-s3-credentials \
+# In a garage pod
+/garage key create spark
+/garage bucket allow --read --write --owner iceberg --key <spark-key-id>
+```
+
+Then create the Kubernetes secret:
+
+```bash
+kubectl create secret generic spark-s3-credentials \
   --namespace spark \
-  --from-literal=AWS_ACCESS_KEY_ID=<garage-key-id> \
-  --from-literal=AWS_SECRET_ACCESS_KEY=<garage-secret-key>
+  --from-literal=AWS_ACCESS_KEY_ID=<spark-key-id> \
+  --from-literal=AWS_SECRET_ACCESS_KEY=<spark-secret-key>
 ```
 
 Then deploy:
