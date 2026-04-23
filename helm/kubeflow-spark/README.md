@@ -79,7 +79,7 @@ Garage first if it doesn't exist:
 ```bash
 # In a garage pod
 /garage key create spark
-/garage bucket allow --read --write --owner iceberg --key <spark-key-id>
+/garage bucket allow --read --write --owner warehouse --key <spark-key-id>
 ```
 
 Then create the Kubernetes secret:

@@ -10,21 +10,16 @@ API root: https://polaris.brians.computer (REST only — no web UI)
 
 ## Storage layout
 
-All Iceberg tables use the base location `s3://polaris/iceberg/`. Table data lands
-in two Garage buckets because Polaris 1.4.0 and Spark parse that URI differently:
+All Iceberg tables use the base location `s3://warehouse/warehouse/`. Both Polaris and
+Spark write to the single `warehouse` Garage bucket:
 
-| Service | Sees `s3://polaris/iceberg/...` as | Writes to Garage bucket |
-|---------|-------------------------------------|-------------------------|
-| Polaris | host=`polaris` (ignored), bucket=`iceberg` | `iceberg` |
-| Spark   | bucket=`polaris`, path=`iceberg/...` | `polaris` |
+- Polaris writes Iceberg metadata JSON files under `warehouse/warehouse/<namespace>/<table>/metadata/`
+- Spark writes Parquet data files and Avro manifest files under `warehouse/warehouse/<namespace>/<table>/data/`
 
-In practice: Polaris writes small Iceberg metadata JSON files to `iceberg`; Spark writes
-all data and manifest files to `polaris`. They never need to read each other's files
-directly — they communicate table metadata through the REST API, not through shared S3
-reads — so the mismatch doesn't cause problems.
-
-The base location `s3://polaris/iceberg/` was chosen deliberately to exploit this
-difference, ensuring each service writes to a bucket it has credentials for.
+> **Note on URI parsing**: Polaris 1.4.0 uses non-standard S3 URI parsing — it treats
+> `s3://HOST/BUCKET/KEY` with HOST as an ignored endpoint alias and BUCKET as the first
+> path component. Setting `default-base-location: s3://warehouse/warehouse/` makes both
+> Polaris (non-standard) and Spark (standard) resolve to the same `warehouse` bucket.
 
 
 ## Add the Helm repo
@@ -44,7 +39,7 @@ kubectl create namespace polaris
 
 ## Create the Garage S3 credentials
 
-Polaris needs its own dedicated Garage access key scoped to the `iceberg` bucket.
+Polaris needs its own dedicated Garage access key scoped to the `warehouse` bucket.
 Do not reuse the `jupyter` key — each service gets its own key.
 
 ```bash
@@ -52,8 +47,8 @@ Do not reuse the `jupyter` key — each service gets its own key.
 kubectl exec -n garage garage-0 -- /garage key create polaris
 # Note the Key ID and Secret key from the output
 
-# Grant it read/write/owner access to the iceberg bucket
-kubectl exec -n garage garage-0 -- /garage bucket allow --read --write --owner iceberg --key <key-id>
+# Grant it read/write/owner access to the warehouse bucket
+kubectl exec -n garage garage-0 -- /garage bucket allow --read --write --owner warehouse --key <key-id>
 ```
 
 Then create the Kubernetes secret:
@@ -65,16 +60,14 @@ kubectl create secret generic polaris-s3-credentials \
   --from-literal=AWS_SECRET_ACCESS_KEY=<secret-key>
 ```
 
-### Create the two storage buckets
+### Create the storage bucket
 
-Create both `iceberg` (Polaris metadata writes) and `polaris` (Spark data writes) if they don't exist:
+Create the `warehouse` bucket and grant access to both the `polaris` and `spark` keys:
 
 ```bash
-kubectl exec -n garage garage-0 -- /garage bucket create iceberg
-kubectl exec -n garage garage-0 -- /garage bucket allow --read --write --owner iceberg --key <polaris-key-id>
-
-kubectl exec -n garage garage-0 -- /garage bucket create polaris
-kubectl exec -n garage garage-0 -- /garage bucket allow --read --write --owner polaris --key <spark-key-id>
+kubectl exec -n garage garage-0 -- /garage bucket create warehouse
+kubectl exec -n garage garage-0 -- /garage bucket allow --read --write --owner warehouse --key <polaris-key-id>
+kubectl exec -n garage garage-0 -- /garage bucket allow --read --write --owner warehouse --key <spark-key-id>
 ```
 
 See `garage/README.md` for the full key/bucket access matrix.
@@ -173,7 +166,7 @@ kubectl create secret generic polaris-credentials \
 ## Create the POLARIS catalog via Management API
 
 After bootstrap, create the actual Iceberg catalog. The `default-base-location` must be
-`s3://polaris/iceberg/` — see the Storage layout section above for why this specific
+`s3://warehouse/warehouse/` — see the Storage layout section above for why this specific
 value is required.
 
 ```bash
@@ -189,13 +182,13 @@ curl -s -X PUT https://polaris.brians.computer/api/management/v1/catalogs/POLARI
     "type": "INTERNAL",
     "name": "POLARIS",
     "properties": {
-      "default-base-location": "s3://polaris/iceberg/",
+      "default-base-location": "s3://warehouse/warehouse/",
       "s3.checksum-enabled": "false"
     },
     "storageConfigInfo": {
       "storageType": "S3",
       "pathStyleAccess": true,
-      "allowedLocations": ["s3://polaris/iceberg/"]
+      "allowedLocations": ["s3://warehouse/warehouse/"]
     }
   }'
 ```

@@ -65,13 +65,12 @@ Never share keys between services.
 | Key name  | Used by                          | Buckets                       |
 |-----------|----------------------------------|-------------------------------|
 | `brian`   | Admin / personal access          | `misc`, `mlflow`              |
-| `jupyter` | JupyterHub notebook pods         | `iceberg`, `misc`             |
-| `polaris` | Apache Polaris (metadata writes) | `iceberg`                     |
-| `spark`   | Spark Connect data + manifest writes | `iceberg`, `polaris`      |
+| `jupyter` | JupyterHub notebook pods         | `warehouse`, `misc`           |
+| `polaris` | Apache Polaris (metadata writes) | `warehouse`                   |
+| `spark`   | Spark Connect data + manifest writes | `warehouse`               |
 
 Buckets:
-- `iceberg` — Polaris writes Iceberg table metadata JSON here (via 1.4.0 non-standard path URI parsing where `s3://polaris/iceberg/...` → bucket=`iceberg`)
-- `polaris` — Spark writes Iceberg data files and manifest files here (via standard S3 URI parsing where `s3://polaris/...` → bucket=`polaris`)
+- `warehouse` — All Iceberg table data and metadata for the Polaris catalog. Polaris writes metadata JSON here; Spark writes data and manifest files here.
 
 To create a new key and grant bucket access:
 
