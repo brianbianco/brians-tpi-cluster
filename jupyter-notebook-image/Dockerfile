@@ -15,5 +15,6 @@ RUN pip install --no-cache-dir \
     pyspark[connect] \
     duckdb \
     pyiceberg[s3fs] \
-    pyarrow
+    pyarrow \
+    polars
 ENV JUPYTER_ENABLE_LAB=yes
