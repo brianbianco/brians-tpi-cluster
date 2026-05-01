@@ -36,6 +36,32 @@ Locate the frontend section and change `ClusterIP` to `LoadBalancer` if you want
 
 `kubeclt apply -f longhorn.yaml`
 
+# multipathd conflict with Longhorn iSCSI volumes
+
+Longhorn attaches volumes via iSCSI as `sd*` block devices. If `multipathd` is running it
+will immediately claim those devices, causing a repeating mount failure:
+
+```
+MountVolume.MountDevice failed ... /dev/longhorn/<pvc-id> already mounted or mount point busy
+```
+
+Add a blacklist stanza to `/etc/multipath.conf` on every node:
+
+```
+blacklist {
+    devnode "^sd[a-z0-9]+"
+}
+```
+
+Then reload if multipathd is active: `sudo systemctl reload multipathd`
+
+**Per-node notes:**
+- `magus.local`: OS is on `nvme0n1`, all `sd*` are transient iSCSI — blacklist is safe,
+  reload required.
+- Workers (`frog`, `marle`, `robo`): `sda` is a real drive (`/mnt/data` + `/mnt/longhorn`),
+  `sdb+` are iSCSI replicas. `multipathd` is installed but inactive — write config as
+  precaution, no reload needed.
+
 # Setting up ingress with ssl
 
 This is the configuration I used to have the frontend service use cert-manager and external-dns
