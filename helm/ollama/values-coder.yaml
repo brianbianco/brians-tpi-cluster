@@ -1,0 +1,52 @@
+ollama:
+  gpu:
+    enabled: false
+  models:
+    pull:
+      - qwen3-coder:8b
+      # - qwen3-coder:14b   # larger option; ~9GB quantized, fits but leaves less headroom
+
+persistentVolume:
+  enabled: true
+  storageClass: local-path
+  accessModes:
+    - ReadWriteOnce
+  size: 50Gi
+
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: hardware
+              operator: In
+              values:
+                - rk1
+
+resources:
+  requests:
+    cpu: "2"
+    memory: "6Gi"
+  limits:
+    cpu: "6"
+    memory: "14Gi"
+
+service:
+  type: ClusterIP
+
+ingress:
+  enabled: true
+  className: traefik
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    external-dns.alpha.kubernetes.io/hostname: ollama.brians.computer
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+  hosts:
+    - host: ollama.brians.computer
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: ollama-tls
+      hosts:
+          - ollama.brians.computer

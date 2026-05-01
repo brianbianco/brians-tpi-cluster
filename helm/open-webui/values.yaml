@@ -1,0 +1,32 @@
+ollama:
+  enabled: false
+
+pipelines:
+  enabled: false
+
+ollamaUrls:
+  - http://ollama-general.ollama.svc.cluster.local:11434
+
+persistence:
+  enabled: true
+  storageClass: longhorn
+  size: 5Gi
+
+ingress:
+  enabled: true
+  class: traefik
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    external-dns.alpha.kubernetes.io/hostname: chat.brians.computer
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+  host: chat.brians.computer
+  tls: true
+  existingSecret: open-webui-tls
+
+resources:
+  requests:
+    cpu: "250m"
+    memory: "512Mi"
+  limits:
+    cpu: "1"
+    memory: "1Gi"
