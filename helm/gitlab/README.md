@@ -201,6 +201,11 @@ kubectl get secret gitlab-initial-root-password -n gitlab \
 
 Log in at `https://gitlab.brians.computer` as `root` with this password.
 
+### Approving new user accounts
+
+New signups require admin approval by default. After a user registers, log in as
+`root` and go to **Admin Area → Users → Pending approval** to approve the account.
+
 ### Verify SSH
 
 ```bash
