@@ -1,0 +1,183 @@
+global:
+  hosts:
+    domain: brians.computer
+    https: true
+    ssh: gitlab.brians.computer
+
+  ingress:
+    class: traefik
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+      external-dns.alpha.kubernetes.io/hostname: gitlab.brians.computer
+      traefik.ingress.kubernetes.io/router.entrypoints: websecure
+      traefik.ingress.kubernetes.io/router.tls: "true"
+    tls:
+      enabled: true
+    configureCertmanager: false
+
+  # External CloudNativePG cluster
+  psql:
+    host: postgres.brians.computer
+    port: 5432
+    database: gitlab
+    username: gitlab
+    password:
+      secret: gitlab-postgres-secret
+      key: password
+
+  minio:
+    enabled: false
+
+  appConfig:
+    object_store:
+      enabled: true
+      proxy_download: true
+      connection:
+        secret: gitlab-s3-secret
+        key: connection
+    lfs:
+      bucket: gitlab-lfs
+    artifacts:
+      bucket: gitlab-artifacts
+    uploads:
+      bucket: gitlab-uploads
+    packages:
+      bucket: gitlab-packages
+    externalDiffs:
+      bucket: gitlab-mr-diffs
+    terraformState:
+      bucket: gitlab-terraform-state
+    ciSecureFiles:
+      bucket: gitlab-ci-secure-files
+    dependencyProxy:
+      bucket: gitlab-dependency-proxy
+
+  gitaly:
+    authToken:
+      secret: gitlab-gitaly-secret
+      key: token
+
+  shell:
+    authToken:
+      secret: gitlab-shell-secret
+      key: secret
+
+  initialRootPassword:
+    secret: gitlab-initial-root-password
+    key: password
+
+# Disable components we already have
+installCertmanager: false
+
+nginx-ingress:
+  enabled: false
+
+prometheus:
+  install: false
+
+postgresql:
+  install: false
+
+gitlab-runner:
+  install: false
+
+# Bundled Redis
+redis:
+  install: true
+  master:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 256Mi
+
+# Container registry - disabled; enable when needed
+registry:
+  enabled: false
+
+gitlab:
+  kas:
+    enabled: false
+
+  gitlab-pages:
+    enabled: false
+
+  gitaly:
+    persistence:
+      storageClass: longhorn
+      size: 50Gi
+    resources:
+      requests:
+        cpu: 100m
+        memory: 200Mi
+      limits:
+        cpu: 1
+        memory: 400Mi
+
+  webservice:
+    minReplicas: 1
+    maxReplicas: 1
+    deployment:
+      # Give Puma up to 10 minutes to boot on slow ARM hardware before liveness kicks in
+      startupProbe:
+        httpGet:
+          path: /-/liveness
+          port: 8080
+        failureThreshold: 60
+        periodSeconds: 10
+    resources:
+      requests:
+        cpu: 200m
+        memory: 1500Mi
+      limits:
+        cpu: 2
+        memory: 3Gi
+
+  sidekiq:
+    minReplicas: 1
+    maxReplicas: 1
+    # Give sidekiq up to 10 minutes to boot on slow ARM hardware
+    livenessProbe:
+      initialDelaySeconds: 600
+    readinessProbe:
+      initialDelaySeconds: 60
+    resources:
+      requests:
+        cpu: 100m
+        memory: 800Mi
+      limits:
+        cpu: 1
+        memory: 2Gi
+
+  gitlab-shell:
+    service:
+      type: ClusterIP
+    resources:
+      requests:
+        cpu: 10m
+        memory: 6Mi
+      limits:
+        cpu: 100m
+        memory: 64Mi
+
+  migrations:
+    resources:
+      requests:
+        cpu: 100m
+        memory: 500Mi
+      limits:
+        cpu: 1
+        memory: 3Gi
+
+  toolbox:
+    enabled: true
+    replicas: 1
+    resources:
+      requests:
+        cpu: 50m
+        memory: 100Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi

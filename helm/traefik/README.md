@@ -1,5 +1,17 @@
 # Traefik Install and Upgrade Instructions
 
+## Entrypoints
+
+| Entrypoint | Internal port | External port | Purpose |
+|---|---|---|---|
+| web | 8000 | 80 | HTTP |
+| websecure | 8443 | 443 | HTTPS |
+| ssh | 2222 | 22 | GitLab SSH (TCP passthrough) |
+
+The `ssh` entrypoint uses an internal port of 2222 because Traefik runs non-root and cannot
+bind privileged ports directly. The MetalLB LoadBalancer maps external port 22 → 2222.
+Routing is handled by `helm/gitlab/ssh-route.yaml` (an `IngressRouteTCP`).
+
 ## Phase 1: Install Core Traefik
 
 ```bash

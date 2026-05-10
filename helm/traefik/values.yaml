@@ -9,3 +9,11 @@ api:
 logs:
   access:
     enabled: true
+
+ports:
+  ssh:
+    port: 2222
+    exposedPort: 22
+    expose:
+      default: true
+    protocol: TCP
