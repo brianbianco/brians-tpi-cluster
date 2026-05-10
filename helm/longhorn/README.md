@@ -6,6 +6,12 @@ helm dependency build
 helm upgrade --install longhorn-install . --namespace longhorn-system --create-namespace --wait
 ```
 
+## Monitoring
+
+A ServiceMonitor is defined in `manifests/servicemonitor-longhorn.yaml`. It scrapes the
+Longhorn manager metrics endpoint (port 9500) and feeds into the Longhorn Grafana dashboard
+(ID 16888) that is pre-loaded in kube-prometheus-stack.
+
 # Upgrading
 
 Longhorn must be upgraded one minor version at a time (e.g. 1.9 → 1.10 → 1.11).

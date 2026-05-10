@@ -1,0 +1,8 @@
+apiVersion: v2
+name: promtail-install
+description: Wrapper chart for Grafana Promtail (log shipper)
+version: 0.1.0
+dependencies:
+  - name: promtail
+    version: "6.16.0"
+    repository: "https://grafana.github.io/helm-charts"

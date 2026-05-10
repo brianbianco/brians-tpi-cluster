@@ -1,0 +1,49 @@
+loki:
+  # Single-binary (monolithic) mode — one pod, filesystem storage.
+  # Suitable for a homelab; scale to SimpleScalable later if needed.
+  deploymentMode: SingleBinary
+
+  loki:
+    auth_enabled: false
+
+    commonConfig:
+      replication_factor: 1
+
+    storage:
+      type: filesystem
+
+    schemaConfig:
+      configs:
+        - from: "2024-01-01"
+          store: tsdb
+          object_store: filesystem
+          schema: v13
+          index:
+            prefix: loki_index_
+            period: 24h
+
+  singleBinary:
+    replicas: 1
+    persistence:
+      enabled: true
+      storageClassName: longhorn
+      size: 10Gi
+
+  # Disable microservice components (not used in SingleBinary mode)
+  read:
+    replicas: 0
+  write:
+    replicas: 0
+  backend:
+    replicas: 0
+
+  # Disable gateway — not needed for single binary; Prometheus queries Loki
+  # directly at http://loki.monitoring.svc.cluster.local:3100
+  gateway:
+    enabled: false
+
+  # Disable bundled caches — not necessary at homelab scale
+  chunksCache:
+    enabled: false
+  resultsCache:
+    enabled: false

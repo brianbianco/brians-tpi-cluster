@@ -17,6 +17,11 @@ spec:
       secret:
         name: app-user
 
+  # enablePodMonitor is deprecated in CNPG 1.29+.
+  # The PodMonitor is managed manually in manifests/podmonitor-postgres.yaml.
+  monitoring:
+    enablePodMonitor: false
+
   resources:
     requests:
       memory: "512Mi"

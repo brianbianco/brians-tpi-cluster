@@ -1,0 +1,19 @@
+# Ollama does not expose a Prometheus metrics endpoint in v0.23.x.
+# Re-enable this ServiceMonitor if/when Ollama adds metrics support.
+#
+# apiVersion: monitoring.coreos.com/v1
+# kind: ServiceMonitor
+# metadata:
+#   name: ollama
+#   namespace: monitoring
+# spec:
+#   selector:
+#     matchLabels:
+#       app.kubernetes.io/name: ollama
+#   namespaceSelector:
+#     matchNames:
+#       - ollama
+#   endpoints:
+#     - port: http
+#       path: /metrics
+#       interval: 30s

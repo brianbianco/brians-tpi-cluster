@@ -34,9 +34,9 @@ kube-prometheus-stack:
       resources:
         requests:
           cpu: 100m
-          memory: 256Mi
+          memory: 512Mi
         limits:
-          memory: 768Mi
+          memory: 1536Mi
 
       affinity:
         nodeAffinity:
@@ -107,6 +107,47 @@ kube-prometheus-stack:
               requests:
                 storage: 1Gi
 
+      # Mount the SMTP password secret so config can reference it via file.
+      # Create the secret first:
+      #   kubectl create secret generic alertmanager-email-secret --from-literal=smtp-password='your-gmail-app-password' -n monitoring
+      secrets:
+        - alertmanager-email-secret
+
+    config:
+      global:
+        resolve_timeout: 5m
+        smtp_smarthost: smtp.gmail.com:587
+        smtp_from: brian.bianco@gmail.com
+        smtp_auth_username: brian.bianco@gmail.com
+        smtp_auth_password_file: /etc/alertmanager/secrets/alertmanager-email-secret/smtp-password
+        smtp_require_tls: true
+
+      route:
+        group_by: ['alertname', 'namespace']
+        group_wait: 30s
+        group_interval: 5m
+        repeat_interval: 4h
+        receiver: email
+        routes:
+          # Silence watchdog (heartbeat alert used to verify alertmanager is running)
+          - matchers:
+              - alertname = Watchdog
+            receiver: 'null'
+
+      receivers:
+        - name: email
+          email_configs:
+            - to: brian.bianco@gmail.com
+              send_resolved: true
+        - name: 'null'
+
+      inhibit_rules:
+        - source_matchers:
+            - 'severity = critical'
+          target_matchers:
+            - 'severity = warning'
+          equal: ['alertname', 'namespace']
+
     ingress:
       enabled: true
       ingressClassName: traefik
@@ -162,7 +203,9 @@ kube-prometheus-stack:
             - grafana.brians.computer
           secretName: grafana-tls
 
-    # Blackbox Exporter uptime dashboard (grafana.com/dashboards/7587)
+    plugins:
+      - yesoreyeram-infinity-datasource
+
     dashboardProviders:
       dashboardproviders.yaml:
         apiVersion: 1
@@ -178,16 +221,37 @@ kube-prometheus-stack:
 
     dashboards:
       default:
+        # grafana.com/dashboards/7587 — HTTP uptime (blackbox exporter)
         blackbox-exporter:
           gnetId: 7587
           revision: 3
           datasource: Prometheus
+        # grafana.com/dashboards/1860 — per-node CPU, memory, disk, temp
+        node-exporter-full:
+          gnetId: 1860
+          revision: 36
+          datasource: Prometheus
+        # grafana.com/dashboards/16888 — Longhorn volume health and disk usage
+        longhorn:
+          gnetId: 16888
+          revision: 9
+          datasource: Prometheus
+        # grafana.com/dashboards/17347 — Traefik request rates and error rates
+        traefik:
+          gnetId: 17347
+          revision: 3
+          datasource: Prometheus
+        # grafana.com/dashboards/9628 — PostgreSQL connections, replication, queries
+        postgresql:
+          gnetId: 9628
+          revision: 7
+          datasource: Prometheus
 
-    # Pre-load the Loki datasource so it's ready when you add Loki later
+    # Loki datasource — becomes active once loki is deployed in the monitoring namespace
     additionalDataSources:
       - name: Loki
         type: loki
-        url: http://loki-gateway.monitoring.svc.cluster.local
+        url: http://loki.monitoring.svc.cluster.local:3100
         access: proxy
         isDefault: false
 

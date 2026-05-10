@@ -1,0 +1,20 @@
+# Manually managed PodMonitor for the CloudNativePG postgres cluster.
+# CNPG's built-in enablePodMonitor flag is deprecated; this replaces it.
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: postgres
+  namespace: postgres
+  labels:
+    app.kubernetes.io/component: database
+    app.kubernetes.io/instance: postgres
+    app.kubernetes.io/name: postgresql
+    cnpg.io/cluster: postgres
+spec:
+  namespaceSelector: {}
+  podMetricsEndpoints:
+    - port: metrics
+  selector:
+    matchLabels:
+      cnpg.io/cluster: postgres
+      cnpg.io/podRole: instance

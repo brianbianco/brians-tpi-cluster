@@ -53,6 +53,13 @@ Wait until you see the Gin HTTP server start line before the pod is considered r
 kubectl exec -n ollama deploy/ollama-general -- ollama pull qwen3:8b
 ```
 
+## Monitoring
+
+Ollama v0.23.x does not expose a Prometheus metrics endpoint. The ServiceMonitor in
+`manifests/servicemonitor-ollama.yaml` is commented out. If a future Ollama version adds
+metrics support, uncomment that file, re-apply it, and search https://grafana.com/grafana/dashboards
+for "Ollama" to find a community dashboard.
+
 ## Connecting from JupyterHub
 
 Use the in-cluster service URL with the OpenAI-compatible client. The `api_key` value

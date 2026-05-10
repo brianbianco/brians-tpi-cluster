@@ -1,0 +1,31 @@
+promtail:
+  config:
+    clients:
+      - url: http://loki.monitoring.svc.cluster.local:3100/loki/api/v1/push
+
+  # Run on every node, including control-plane
+  tolerations:
+    - operator: Exists
+
+  # Raise inotify limits on the host before Promtail starts.
+  # Needed on nodes running many pods (e.g. magus) where the default
+  # max_user_instances=128 causes "too many open files" on startup.
+  initContainer:
+    - name: init-inotify
+      image: docker.io/busybox:1.33
+      imagePullPolicy: IfNotPresent
+      securityContext:
+        privileged: true
+      command:
+        - sh
+        - -c
+        - |
+          sysctl -w fs.inotify.max_user_watches=524288
+          sysctl -w fs.inotify.max_user_instances=512
+
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      memory: 128Mi

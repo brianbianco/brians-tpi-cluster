@@ -24,6 +24,14 @@ kubectl apply -f cluster.yaml
 kubectl apply -f service.yaml
 ```
 
+## Monitoring
+
+`cluster.yaml` has `monitoring.enablePodMonitor: true`. The CNPG operator automatically
+creates a PodMonitor and attaches a metrics exporter sidecar to each Postgres pod —
+no separate exporter deployment needed. Metrics are scraped by Prometheus and visible
+in the PostgreSQL dashboard (ID 9628) pre-loaded in Grafana. For a CNPG-specific
+dashboard, search https://grafana.com/grafana/dashboards for "CloudNativePG".
+
 # Creating new users / databases
 
 ```

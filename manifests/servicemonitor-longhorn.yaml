@@ -1,0 +1,18 @@
+# ServiceMonitor for Longhorn storage manager.
+# Longhorn exposes Prometheus metrics on port 9500 of the longhorn-backend service.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: longhorn
+  namespace: monitoring
+spec:
+  selector:
+    matchLabels:
+      app: longhorn-manager
+  namespaceSelector:
+    matchNames:
+      - longhorn-system
+  endpoints:
+    - port: manager
+      path: /metrics
+      interval: 30s

@@ -82,6 +82,12 @@ kubectl exec -n garage garage-0 -- /garage bucket allow --read --write --owner <
 The corresponding Kubernetes secret should be named `<service>-s3-credentials` and
 created in the service's namespace.
 
+## Monitoring
+
+The Garage ServiceMonitor is enabled in `values.yaml` (`monitoring.metrics.serviceMonitor.enabled: true`).
+Prometheus scrapes the `/metrics` endpoint on the Garage service and places results in the
+`monitoring` namespace. No additional setup required.
+
 ## Verify values
 
 To see all available configuration options from the upstream chart:

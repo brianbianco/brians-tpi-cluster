@@ -37,6 +37,16 @@ garage:
       storageClass: longhorn-single-replica
       size: 60Gi
 
+  monitoring:
+    metrics:
+      enabled: true
+      serviceMonitor:
+        enabled: true
+        namespace: monitoring
+        interval: 30s
+        path: /metrics
+        scheme: http
+
   ingress:
     s3:
       api:
