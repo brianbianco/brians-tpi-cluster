@@ -1,0 +1,183 @@
+kube-prometheus-stack:
+
+  # ------------------------------------------------------------------ #
+  # k3s component monitors
+  #
+  # k3s runs controller-manager, scheduler, and kube-proxy as part of
+  # its single binary rather than as discrete pods, so the default
+  # ServiceMonitors for these components will never find targets.
+  # Disable them to keep Prometheus alert-free. The kubelet and
+  # kube-state-metrics monitors work fine.
+  # ------------------------------------------------------------------ #
+  kubeControllerManager:
+    enabled: false
+
+  kubeScheduler:
+    enabled: false
+
+  kubeProxy:
+    enabled: false
+
+  # k3s embedded etcd exposes unauthenticated metrics on port 2381.
+  # Point the monitor at the control-plane node IP.
+  kubeEtcd:
+    enabled: true
+    endpoints:
+      - 192.168.4.183   # magus.local (control-plane)
+    service:
+      enabled: true
+      port: 2381
+      targetPort: 2381
+    serviceMonitor:
+      scheme: http
+      insecureSkipVerify: true
+
+  # ------------------------------------------------------------------ #
+  # Prometheus
+  # ------------------------------------------------------------------ #
+  prometheus:
+    prometheusSpec:
+      retention: 14d
+      retentionSize: "8GB"
+
+      resources:
+        requests:
+          cpu: 100m
+          memory: 256Mi
+        limits:
+          memory: 768Mi
+
+      storageSpec:
+        volumeClaimTemplate:
+          spec:
+            storageClassName: longhorn
+            accessModes: ["ReadWriteOnce"]
+            resources:
+              requests:
+                storage: 10Gi
+
+      # Pick up ServiceMonitors and PodMonitors from any namespace
+      serviceMonitorSelectorNilUsesHelmValues: false
+      podMonitorSelectorNilUsesHelmValues: false
+      ruleSelectorNilUsesHelmValues: false
+
+    ingress:
+      enabled: true
+      ingressClassName: traefik
+      annotations:
+        cert-manager.io/cluster-issuer: "letsencrypt-prod"
+        external-dns.alpha.kubernetes.io/hostname: "prometheus.brians.computer"
+        traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+        traefik.ingress.kubernetes.io/router.tls: "true"
+      hosts:
+        - prometheus.brians.computer
+      tls:
+        - hosts:
+            - prometheus.brians.computer
+          secretName: prometheus-tls
+
+  # ------------------------------------------------------------------ #
+  # Alertmanager
+  # ------------------------------------------------------------------ #
+  alertmanager:
+    alertmanagerSpec:
+      resources:
+        requests:
+          cpu: 10m
+          memory: 32Mi
+        limits:
+          memory: 64Mi
+
+      storage:
+        volumeClaimTemplate:
+          spec:
+            storageClassName: longhorn
+            accessModes: ["ReadWriteOnce"]
+            resources:
+              requests:
+                storage: 1Gi
+
+    ingress:
+      enabled: true
+      ingressClassName: traefik
+      annotations:
+        cert-manager.io/cluster-issuer: "letsencrypt-prod"
+        external-dns.alpha.kubernetes.io/hostname: "alertmanager.brians.computer"
+        traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+        traefik.ingress.kubernetes.io/router.tls: "true"
+      hosts:
+        - alertmanager.brians.computer
+      tls:
+        - hosts:
+            - alertmanager.brians.computer
+          secretName: alertmanager-tls
+
+  # ------------------------------------------------------------------ #
+  # Grafana
+  # ------------------------------------------------------------------ #
+  grafana:
+    adminPassword: ""          # set via grafana-secret below
+    admin:
+      existingSecret: grafana-secret
+      userKey: admin-user
+      passwordKey: admin-password
+
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        memory: 256Mi
+
+    persistence:
+      enabled: true
+      storageClassName: longhorn
+      size: 2Gi
+
+    ingress:
+      enabled: true
+      ingressClassName: traefik
+      annotations:
+        cert-manager.io/cluster-issuer: "letsencrypt-prod"
+        external-dns.alpha.kubernetes.io/hostname: "grafana.brians.computer"
+        traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+        traefik.ingress.kubernetes.io/router.tls: "true"
+      hosts:
+        - grafana.brians.computer
+      tls:
+        - hosts:
+            - grafana.brians.computer
+          secretName: grafana-tls
+
+    # Pre-load the Loki datasource so it's ready when you add Loki later
+    additionalDataSources:
+      - name: Loki
+        type: loki
+        url: http://loki-gateway.monitoring.svc.cluster.local
+        access: proxy
+        isDefault: false
+
+  # ------------------------------------------------------------------ #
+  # node-exporter
+  # Tolerate all nodes including control-plane so every node is scraped
+  # ------------------------------------------------------------------ #
+  prometheus-node-exporter:
+    tolerations:
+      - operator: Exists
+    resources:
+      requests:
+        cpu: 10m
+        memory: 32Mi
+      limits:
+        memory: 64Mi
+
+  # ------------------------------------------------------------------ #
+  # kube-state-metrics
+  # ------------------------------------------------------------------ #
+  kube-state-metrics:
+    resources:
+      requests:
+        cpu: 10m
+        memory: 64Mi
+      limits:
+        memory: 128Mi
