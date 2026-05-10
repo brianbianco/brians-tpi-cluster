@@ -36,7 +36,7 @@ kube-prometheus-stack:
           cpu: 100m
           memory: 512Mi
         limits:
-          memory: 1536Mi
+          memory: 2560Mi
 
       affinity:
         nodeAffinity:
@@ -133,6 +133,18 @@ kube-prometheus-stack:
           - matchers:
               - alertname = Watchdog
             receiver: 'null'
+          # GitLab migration jobs complete successfully but kube-state-metrics
+          # may still report them as failed; silence these false positives.
+          - matchers:
+              - namespace = gitlab
+              - alertname =~ "KubeJobFailed|KubeJobNotCompleted"
+            receiver: 'null'
+          # GitLab pods restart during updates and on startup; route to email
+          # but suppress repeats for 24h so a single event doesn't spam.
+          - matchers:
+              - namespace = gitlab
+            receiver: email
+            repeat_interval: 24h
 
       receivers:
         - name: email
