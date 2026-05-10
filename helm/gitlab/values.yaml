@@ -119,6 +119,7 @@ gitlab:
   webservice:
     minReplicas: 1
     maxReplicas: 1
+    workerProcesses: 1
     deployment:
       # Give Puma up to 10 minutes to boot on slow ARM hardware before liveness kicks in
       startupProbe:
@@ -130,14 +131,15 @@ gitlab:
     resources:
       requests:
         cpu: 200m
-        memory: 1500Mi
+        memory: 1200Mi
       limits:
         cpu: 2
-        memory: 3Gi
+        memory: 2400Mi
 
   sidekiq:
     minReplicas: 1
     maxReplicas: 1
+    concurrency: 2
     # Give sidekiq up to 10 minutes to boot on slow ARM hardware
     livenessProbe:
       initialDelaySeconds: 600
@@ -146,10 +148,10 @@ gitlab:
     resources:
       requests:
         cpu: 100m
-        memory: 800Mi
+        memory: 400Mi
       limits:
         cpu: 1
-        memory: 2Gi
+        memory: 1500Mi
 
   gitlab-shell:
     service:
@@ -172,7 +174,7 @@ gitlab:
         memory: 3Gi
 
   toolbox:
-    enabled: true
+    enabled: false
     replicas: 1
     resources:
       requests:

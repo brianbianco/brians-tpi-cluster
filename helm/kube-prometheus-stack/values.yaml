@@ -18,19 +18,10 @@ kube-prometheus-stack:
   kubeProxy:
     enabled: false
 
-  # k3s embedded etcd exposes unauthenticated metrics on port 2381.
-  # Point the monitor at the control-plane node IP.
+  # k3s embedded etcd binds port 2381 to localhost only on the control-plane
+  # node, so Prometheus cannot reach it across the network. Disabled.
   kubeEtcd:
-    enabled: true
-    endpoints:
-      - 192.168.4.183   # magus.local (control-plane)
-    service:
-      enabled: true
-      port: 2381
-      targetPort: 2381
-    serviceMonitor:
-      scheme: http
-      insecureSkipVerify: true
+    enabled: false
 
   # ------------------------------------------------------------------ #
   # Prometheus
@@ -47,6 +38,24 @@ kube-prometheus-stack:
         limits:
           memory: 768Mi
 
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              preference:
+                matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values:
+                      - magus.local
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: NotIn
+                    values:
+                      - robo.local
+
       storageSpec:
         volumeClaimTemplate:
           spec:
@@ -56,10 +65,11 @@ kube-prometheus-stack:
               requests:
                 storage: 10Gi
 
-      # Pick up ServiceMonitors and PodMonitors from any namespace
+      # Pick up ServiceMonitors, PodMonitors, Probes, and Rules from any namespace
       serviceMonitorSelectorNilUsesHelmValues: false
       podMonitorSelectorNilUsesHelmValues: false
       ruleSelectorNilUsesHelmValues: false
+      probeSelectorNilUsesHelmValues: false
 
     ingress:
       enabled: true
@@ -116,6 +126,9 @@ kube-prometheus-stack:
   # Grafana
   # ------------------------------------------------------------------ #
   grafana:
+    deploymentStrategy:
+      type: Recreate
+
     adminPassword: ""          # set via grafana-secret below
     admin:
       existingSecret: grafana-secret
@@ -149,6 +162,27 @@ kube-prometheus-stack:
             - grafana.brians.computer
           secretName: grafana-tls
 
+    # Blackbox Exporter uptime dashboard (grafana.com/dashboards/7587)
+    dashboardProviders:
+      dashboardproviders.yaml:
+        apiVersion: 1
+        providers:
+          - name: default
+            orgId: 1
+            folder: ""
+            type: file
+            disableDeletion: false
+            editable: true
+            options:
+              path: /var/lib/grafana/dashboards/default
+
+    dashboards:
+      default:
+        blackbox-exporter:
+          gnetId: 7587
+          revision: 3
+          datasource: Prometheus
+
     # Pre-load the Loki datasource so it's ready when you add Loki later
     additionalDataSources:
       - name: Loki
@@ -181,3 +215,38 @@ kube-prometheus-stack:
         memory: 64Mi
       limits:
         memory: 128Mi
+
+# ------------------------------------------------------------------ #
+# Blackbox Exporter
+# Probes HTTP endpoints and reports up/down to Prometheus.
+# Probe targets are defined as Probe CRDs in manifests/blackbox-probes.yaml
+# ------------------------------------------------------------------ #
+prometheus-blackbox-exporter:
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      memory: 64Mi
+
+  config:
+    modules:
+      # Follows redirects to login pages; expects final 2xx — good for web UIs
+      http_2xx_follow:
+        prober: http
+        timeout: 15s
+        http:
+          valid_http_versions: ["HTTP/1.1", "HTTP/2.0"]
+          follow_redirects: true
+          preferred_ip_protocol: "ip4"
+
+      # Does not follow redirects; accepts 2xx/3xx/4xx — good for API endpoints
+      # that return 403/401 for unauthenticated requests (e.g. S3 API)
+      http_reachable:
+        prober: http
+        timeout: 15s
+        http:
+          valid_http_versions: ["HTTP/1.1", "HTTP/2.0"]
+          valid_status_codes: [200, 201, 202, 204, 301, 302, 303, 307, 308, 401, 403]
+          follow_redirects: false
+          preferred_ip_protocol: "ip4"

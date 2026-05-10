@@ -1,0 +1,56 @@
+# Blackbox Exporter Probe CRDs
+# Prometheus-operator picks these up and generates scrape configs automatically.
+# Add/remove targets here; no Helm changes needed.
+---
+# Web UIs — follows redirects, expects final HTTP 2xx (login pages are 200)
+apiVersion: monitoring.coreos.com/v1
+kind: Probe
+metadata:
+  name: blackbox-web-uis
+  namespace: monitoring
+spec:
+  interval: 60s
+  scrapeTimeout: 15s
+  module: http_2xx_follow
+  prober:
+    url: kube-prometheus-stack-prometheus-blackbox-exporter.monitoring.svc.cluster.local:9115
+    path: /probe
+    scheme: http
+  targets:
+    staticConfig:
+      static:
+        - https://grafana.brians.computer
+        - https://prometheus.brians.computer
+        - https://alertmanager.brians.computer
+        - https://gitlab.brians.computer
+        - https://jupyter.brians.computer
+        - https://longhorn-ui.brians.computer
+        - https://mlflow.brians.computer
+        - https://chat.brians.computer
+        - https://garage-ui.brians.computer
+        - https://ollama-general.brians.computer
+      labels:
+        probe_type: web_ui
+---
+# API endpoints — does not follow redirects; accepts 2xx/3xx/4xx
+# (e.g. Garage S3 returns 403 for unauthenticated requests)
+apiVersion: monitoring.coreos.com/v1
+kind: Probe
+metadata:
+  name: blackbox-api-endpoints
+  namespace: monitoring
+spec:
+  interval: 60s
+  scrapeTimeout: 15s
+  module: http_reachable
+  prober:
+    url: kube-prometheus-stack-prometheus-blackbox-exporter.monitoring.svc.cluster.local:9115
+    path: /probe
+    scheme: http
+  targets:
+    staticConfig:
+      static:
+        - https://garage.brians.computer
+        - https://polaris.brians.computer/api/catalog/v1/config
+      labels:
+        probe_type: api

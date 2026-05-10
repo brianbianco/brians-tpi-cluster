@@ -16,3 +16,11 @@ spec:
     logs:
       access:
         enabled: true
+    metrics:
+      prometheus:
+        entryPoint: metrics
+    ports:
+      metrics:
+        port: 9100
+        expose:
+          default: false
