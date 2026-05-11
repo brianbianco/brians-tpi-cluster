@@ -82,6 +82,21 @@ mkdir -p ~/.kube
 ln -s /etc/rancher/k3s/k3s.yaml ~/.kube/config
 ```
 
+# Cap systemd journal size
+
+The journal has no size limit by default and will grow to 2-4 GB unchecked, causing
+kubelet `DiskPressure` on the 29 GB eMMC nodes. Run this on every node:
+
+```bash
+sudo mkdir -p /etc/systemd/journald.conf.d
+sudo tee /etc/systemd/journald.conf.d/max-size.conf > /dev/null <<'EOF'
+[Journal]
+SystemMaxUse=200M
+EOF
+sudo systemctl restart systemd-journald
+sudo journalctl --vacuum-size=200M
+```
+
 # Optionally change where the containerd images are stored
 
 This would only be needed if you hadn't set the `data-dir` in the install config
