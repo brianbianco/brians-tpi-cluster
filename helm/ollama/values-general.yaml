@@ -7,7 +7,7 @@ ollama:
 
 persistentVolume:
   enabled: true
-  storageClass: local-path
+  storageClass: longhorn
   accessModes:
     - ReadWriteOnce
   size: 20Gi

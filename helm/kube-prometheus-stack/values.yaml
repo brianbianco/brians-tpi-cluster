@@ -9,10 +9,29 @@ kube-prometheus-stack:
   defaultRules:
     disabled:
       CPUThrottlingHigh: true
+      # marle.local runs Gitaly, Postgres, and Longhorn — heavy I/O workloads drive
+      # up load average without the node actually being unresponsive. Override below.
+      NodeSystemSaturation: true
 
   additionalPrometheusRulesMap:
     custom-thresholds:
       groups:
+        - name: node-exporter-custom
+          rules:
+            - alert: NodeSystemSaturation
+              annotations:
+                description: |
+                  System load per core at {{ $labels.instance }} has been above 8 for the last 15 minutes, is currently at {{ printf "%.2f" $value }}.
+                  This might indicate this instance resources saturation and can cause it becoming unresponsive.
+                runbook_url: https://runbooks.prometheus-operator.dev/runbooks/node/nodesystemsaturation
+                summary: System saturated, load per core is very high.
+              expr: |-
+                node_load1{job="node-exporter"}
+                / count without (cpu, mode) (node_cpu_seconds_total{job="node-exporter", mode="idle"}) > 8
+              for: 15m
+              labels:
+                severity: warning
+
         - name: kubernetes-resources-custom
           rules:
             - alert: CPUThrottlingHigh
