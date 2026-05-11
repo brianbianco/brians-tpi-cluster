@@ -12,12 +12,30 @@ kube-prometheus-stack:
       # marle.local runs Gitaly, Postgres, and Longhorn — heavy I/O workloads drive
       # up load average without the node actually being unresponsive. Override below.
       NodeSystemSaturation: true
+      # Cluster nodes routinely run above 90% without impact. Override below at 93%/1h.
+      NodeMemoryHighUtilization: true
 
   additionalPrometheusRulesMap:
     custom-thresholds:
       groups:
         - name: node-exporter-custom
           rules:
+            - alert: NodeMemoryHighUtilization
+              annotations:
+                description: >
+                  Memory is filling up at {{ $labels.instance }}, has been above 93% for the
+                  last hour, is currently at {{ $value | humanizePercentage }}.
+                runbook_url: https://runbooks.prometheus-operator.dev/runbooks/node/nodememoryhighutilization
+                summary: Host is running out of memory.
+              expr: |-
+                1 - (
+                  node_memory_MemAvailable_bytes{job="node-exporter"}
+                  / node_memory_MemTotal_bytes{job="node-exporter"}
+                ) > 0.93
+              for: 1h
+              labels:
+                severity: warning
+
             - alert: NodeSystemSaturation
               annotations:
                 description: |
