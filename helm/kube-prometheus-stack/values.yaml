@@ -81,6 +81,9 @@ kube-prometheus-stack:
       retention: 14d
       retentionSize: "8GB"
 
+      tsdb:
+        outOfOrderTimeWindow: 10m
+
       resources:
         requests:
           cpu: 100m
@@ -182,6 +185,16 @@ kube-prometheus-stack:
           # Silence watchdog (heartbeat alert used to verify alertmanager is running)
           - matchers:
               - alertname = Watchdog
+            receiver: 'null'
+          # InfoInhibitor is a meta-alert used to inhibit info-severity alerts when no
+          # warning/critical is active. It should never reach a receiver.
+          - matchers:
+              - alertname = InfoInhibitor
+            receiver: 'null'
+          # magus (rk1) runs ollama inference and routinely sustains >90% CPU — visible
+          # in Alertmanager but not worth an email.
+          - matchers:
+              - alertname = NodeCPUHighUsage
             receiver: 'null'
           # GitLab migration jobs complete successfully but kube-state-metrics
           # may still report them as failed; silence these false positives.
