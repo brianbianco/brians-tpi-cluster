@@ -21,11 +21,13 @@ kubectl create secret generic alertmanager-email-secret --from-literal=smtp-pass
 # Fetch chart dependencies
 helm dependency update ./helm/kube-prometheus-stack
 
-# Install
+# Install / Upgrade
 helm upgrade --install kube-prometheus-stack ./helm/kube-prometheus-stack \
   --namespace monitoring \
-  --wait
+  --no-hooks
 ```
+
+> **Note**: `--no-hooks` is required. The pre-upgrade hook (webhook cert generation) times out on this cluster.
 
 ## URLs
 
@@ -57,10 +59,9 @@ The following dashboards are pre-loaded at startup:
 | Node Exporter Full | 1860 | Per-node CPU, memory, disk, network, temperature |
 | Longhorn | 16888 | Volume health, replica sync, disk usage |
 | Traefik | 17347 | Request rates, error rates, latency per route |
-| PostgreSQL | 9628 | Connections, queries, replication (CNPG metrics) |
+| CloudNativePG | 20417 | CNPG cluster overview: connections, queries, replication |
 
 For an Ollama-specific dashboard, search https://grafana.com/grafana/dashboards for "Ollama".
-For a CNPG-tailored PostgreSQL dashboard, search for "CloudNativePG".
 
 ## Grafana plugins
 

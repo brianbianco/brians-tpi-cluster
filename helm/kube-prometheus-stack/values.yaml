@@ -1,6 +1,37 @@
 kube-prometheus-stack:
 
   # ------------------------------------------------------------------ #
+  # Default rule overrides
+  #
+  # CPUThrottlingHigh fires at 25% by default; GitLab regularly exceeds that
+  # without real impact. Disable the built-in rule and re-add it at 66%.
+  # ------------------------------------------------------------------ #
+  defaultRules:
+    disabled:
+      CPUThrottlingHigh: true
+
+  additionalPrometheusRulesMap:
+    custom-thresholds:
+      groups:
+        - name: kubernetes-resources-custom
+          rules:
+            - alert: CPUThrottlingHigh
+              annotations:
+                description: '{{ $value | humanizePercentage }} throttling of CPU in namespace
+                  {{ $labels.namespace }} for container {{ $labels.container }} in pod
+                  {{ $labels.pod }} on cluster {{ $labels.cluster }}.'
+                runbook_url: https://runbooks.prometheus-operator.dev/runbooks/kubernetes/cputhrottlinghigh
+                summary: Processes experience elevated CPU throttling.
+              expr: |-
+                sum(increase(container_cpu_cfs_throttled_periods_total{container!="", job="kubelet", metrics_path="/metrics/cadvisor", }[5m])) without (id, metrics_path, name, image, endpoint, job, node)
+                  / on (cluster, namespace, pod, container, instance) group_left
+                sum(increase(container_cpu_cfs_periods_total{job="kubelet", metrics_path="/metrics/cadvisor", }[5m])) without (id, metrics_path, name, image, endpoint, job, node)
+                  > ( 66 / 100 )
+              for: 15m
+              labels:
+                severity: info
+
+  # ------------------------------------------------------------------ #
   # k3s component monitors
   #
   # k3s runs controller-manager, scheduler, and kube-proxy as part of
@@ -139,6 +170,11 @@ kube-prometheus-stack:
               - namespace = gitlab
               - alertname =~ "KubeJobFailed|KubeJobNotCompleted"
             receiver: 'null'
+          # GitLab HPAs routinely run at max replicas without service impact.
+          - matchers:
+              - namespace = gitlab
+              - alertname = KubeHpaMaxedOut
+            receiver: 'null'
           # GitLab pods restart during updates and on startup; route to email
           # but suppress repeats for 24h so a single event doesn't spam.
           - matchers:
@@ -191,9 +227,9 @@ kube-prometheus-stack:
     resources:
       requests:
         cpu: 50m
-        memory: 128Mi
-      limits:
         memory: 256Mi
+      limits:
+        memory: 512Mi
 
     persistence:
       enabled: true
@@ -251,13 +287,17 @@ kube-prometheus-stack:
         # grafana.com/dashboards/17347 — Traefik request rates and error rates
         traefik:
           gnetId: 17347
-          revision: 3
-          datasource: Prometheus
-        # grafana.com/dashboards/9628 — PostgreSQL connections, replication, queries
+          revision: 9
+          datasource:
+            - name: DS_PROMETHEUS
+              value: Prometheus
+        # grafana.com/dashboards/20417 — CloudNativePG cluster overview
         postgresql:
-          gnetId: 9628
-          revision: 7
-          datasource: Prometheus
+          gnetId: 20417
+          revision: 1
+          datasource:
+            - name: DS_PROMETHEUS
+              value: Prometheus
 
     # Loki datasource — becomes active once loki is deployed in the monitoring namespace
     additionalDataSources:
