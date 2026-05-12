@@ -10,3 +10,16 @@ spec:
   stripPrefixRegex:
     regex:
       - "^/job/[^/]+"
+---
+# Catches the bare /jobs/, /stages/, etc. redirect that Spark generates when it
+# doesn't know its proxy base, and sends the browser back to the prefixed path.
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: spark-connect-rewrite-root
+  namespace: spark
+spec:
+  redirectRegex:
+    regex: "^https?://spark\\.brians\\.computer/(.*)"
+    replacement: "https://spark.brians.computer/job/spark-connect/${1}"
+    permanent: false

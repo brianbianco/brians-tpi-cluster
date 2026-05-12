@@ -73,8 +73,79 @@ spec:
     spark.sql.catalog.polaris.s3.endpoint: "http://garage.garage.svc.cluster.local:3900"
     spark.sql.catalog.polaris.s3.region: "garage"
     spark.sql.catalog.polaris.s3.path-style-access: "true"
+    spark.ui.proxyBase: "/job/spark-connect"
   dynamicAllocation:
     enabled: true
     minExecutors: 0
     maxExecutors: 4
     shuffleTrackingEnabled: true
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: spark-connect-ui-ingress
+  namespace: spark
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: spark.brians.computer
+    traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
+    traefik.ingress.kubernetes.io/router.pathmatcher: PathRegexp
+    traefik.ingress.kubernetes.io/router.middlewares: spark-spark-strip-job-prefix@kubernetescrd
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: spark.brians.computer
+      http:
+        paths:
+          - path: /job/spark-connect(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: spark-connect-server
+                port:
+                  number: 4040
+  tls:
+    - hosts:
+        - spark.brians.computer
+      secretName: spark-tls
+---
+# Catches bare Spark UI paths on HTTPS (e.g. /jobs/, /stages/) that Spark generates
+# in its root redirect, and bounces the browser to the correct prefixed URL.
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: spark-connect-root-redirect-https
+  namespace: spark
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`spark.brians.computer`) && !PathPrefix(`/job/`)
+      kind: Rule
+      priority: 1
+      middlewares:
+        - name: spark-connect-rewrite-root
+      services:
+        - name: spark-connect-server
+          port: 4040
+  tls:
+    secretName: spark-tls
+---
+# Same as above but for plain HTTP — Spark generates http:// Location headers so the
+# browser follows the redirect over HTTP, requiring a separate route without TLS.
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: spark-connect-root-redirect-http
+  namespace: spark
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`spark.brians.computer`) && !PathPrefix(`/job/`)
+      kind: Rule
+      priority: 1
+      middlewares:
+        - name: spark-connect-rewrite-root
+      services:
+        - name: spark-connect-server
+          port: 4040
