@@ -14,6 +14,8 @@ kube-prometheus-stack:
       NodeSystemSaturation: true
       # Cluster nodes routinely run above 90% without impact. Override below at 93%/1h.
       NodeMemoryHighUtilization: true
+      # Longhorn replica/sync I/O bursts cause transient spikes that resolve in ~20m. Override below at 30m.
+      NodeMemoryMajorPagesFaults: true
 
   additionalPrometheusRulesMap:
     custom-thresholds:
@@ -33,6 +35,18 @@ kube-prometheus-stack:
                   / node_memory_MemTotal_bytes{job="node-exporter"}
                 ) > 0.93
               for: 1h
+              labels:
+                severity: warning
+
+            - alert: NodeMemoryMajorPagesFaults
+              annotations:
+                description: |
+                  Memory major pages are occurring at very high rate at {{ $labels.instance }}, 500 major page faults per second for the last 30 minutes, is currently at {{ printf "%.2f" $value }}.
+                  Please check that there is enough memory available at this instance.
+                runbook_url: https://runbooks.prometheus-operator.dev/runbooks/node/nodememorymajorpagesfaults
+                summary: Memory major page faults are occurring at very high rate.
+              expr: rate(node_vmstat_pgmajfault{job="node-exporter"}[5m]) > 500
+              for: 30m
               labels:
                 severity: warning
 
