@@ -12,3 +12,53 @@ spec:
       services:
         - name: api@internal
           kind: TraefikService
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: traefik-dashboard-tls
+  namespace: kube-system
+spec:
+  secretName: traefik-dashboard-tls
+  dnsNames:
+    - traefik.brians.computer
+  issuerRef:
+    kind: ClusterIssuer
+    group: cert-manager.io
+    name: letsencrypt-prod
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: traefik-dashboard-redirect
+  namespace: kube-system
+spec:
+  redirectRegex:
+    regex: ^https://traefik\.brians\.computer/?$
+    replacement: https://traefik.brians.computer/dashboard/
+    permanent: true
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: traefik-dashboard-https
+  namespace: kube-system
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`traefik.brians.computer`) && (PathPrefix(`/dashboard`) || PathPrefix(`/api`))
+      kind: Rule
+      services:
+        - name: api@internal
+          kind: TraefikService
+    - match: Host(`traefik.brians.computer`)
+      kind: Rule
+      priority: 1
+      middlewares:
+        - name: traefik-dashboard-redirect
+      services:
+        - name: api@internal
+          kind: TraefikService
+  tls:
+    secretName: traefik-dashboard-tls

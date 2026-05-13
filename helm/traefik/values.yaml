@@ -2,6 +2,10 @@ deployment:
   enabled: true
   kind: DaemonSet
 
+service:
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: "traefik.brians.computer"
+
 api:
   insecure: true
   dashboard: true
